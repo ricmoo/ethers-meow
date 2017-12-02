@@ -1,0 +1,23 @@
+{
+  "name": "ethers-meow",
+  "version": "0.0.1",
+  "description": "A simple CLI for CryptoKitties using ethers.js.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "meow": "./bin/meow.js"
+  },
+  "keywords": [
+    "CryptoKitties",
+    "ethers.js",
+    "meow"
+  ],
+  "author": "Richard Moore <me@ricmoo.com>",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^2.1.3",
+    "ethers-cli": "^2.0.0"
+  }
+}
