@@ -255,6 +255,24 @@ getopts(options).then(function(opts) {
             });
         })();
 
+        case 'mix-genes': return (function() {
+            if (opts.args.length !== 3) { getopts.throwError('mix-genes requires GENES1, GENES2 and TARGET_BLOCK'); }
+            var genes1 = ethers.utils.bigNumberify(opts.args.shift());
+            var genes2 = ethers.utils.bigNumberify(opts.args.shift());
+            var targetBlock = parseInt(opts.args.shift());
+
+            return (function() {
+                return manager.mixGenes(genes1, genes2, targetBlock).then(function(result) {
+                    console.log('Mix Genes');
+                    result = result.toHexString();
+                    while (result.length < 66) { result = '0x0' + result.substring(2); }
+                    indented({
+                        'Genes': result
+                    });
+                });
+            });
+        })();
+
         default:
             getopts.throwError('unknown command - ' + command);
     }
@@ -282,6 +300,8 @@ getopts(options).then(function(opts) {
     console.log('    meow approve KITTY_ID ADDRESS');
     console.log('');
     console.log('    meow give-birth KITTY_ID');
+    console.log('');
+    console.log('    meow mix-genes GENES1 GENES2 TARGET_BLOCK');
     console.log('');
     console.log('Node Options');
     console.log('  --rpc URL             Use the Ethereum node at URL');

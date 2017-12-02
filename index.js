@@ -6,6 +6,8 @@ var kittyCoreInterface = require('./contracts/KittyCore.json');
 var saleClockInterface = require('./contracts/SaleClockAuction.json');
 var siringClockInterface = require('./contracts/SiringClockAuction.json');
 
+var geneScienceInterface = require('./contracts/GeneScience.json');
+
 var kittyCoreAddress = '0x06012c8cf97BEaD5deAe237070F9587f8E7A266d';
 var saleClockAddress = '0xb1690C08E213a35Ed9bAb7B318DE14420FB57d8C';
 var siringClockAddress = '0xC7af99Fe5513eB6710e6D5f44F9989dA40F27F26';
@@ -89,6 +91,8 @@ function Manager(providerOrSigner) {
     ethers.utils.defineProperty(this, '_saleClock', new ethers.Contract(saleClockAddress, saleClockInterface, provider));
     ethers.utils.defineProperty(this, '_kittyCore', new ethers.Contract(kittyCoreAddress, kittyCoreInterface, providerOrSigner));
 }
+
+
 
 Manager.prototype.getKitty = function(kittyId) {
     return Promise.all([
@@ -209,6 +213,25 @@ Manager.prototype.approve = function(kittyId, address) {
 Manager.prototype.transfer = function(kittyId, address) {
     if (this.signer == null) { return Promise.reject(new Error('missing signer')); }
     return this._kittyCore.transfer(address, kittyId);
+}
+
+Manager.prototype._getGeneScience = function() {
+    if (!this._geneSciencePromise) {
+        var self = this;
+        this._geneSciencePromise = this._kittyCore.geneScience().then(function(result) {
+            return new ethers.Contract(result[0], geneScienceInterface, self.provider);
+        });
+    }
+    return this._geneSciencePromise;
+}
+
+Manager.prototype.mixGenes = function(genes1, genes2, targetBlock) {
+    var self = this;
+    return this._getGeneScience().then(function(contract) {
+        return contract.mixGenes(genes1, genes2, targetBlock).then(function(result) {
+            return result[0];
+        });
+    });
 }
 
 module.exports = {
