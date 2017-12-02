@@ -61,7 +61,7 @@ Examples
 **Lookup kitties by ID**
 
 ```
-/Users/ricmoo> meow lookup 27500
+/Users/ricmoo> meow lookup 20000 27500
 Kitty #20000
   Birthdate:    2017-12-02 02:17:05
   Busy Until:   0
