@@ -262,6 +262,7 @@ var address = '0x8ba1f109551bD432803012645Ac136ddd64DBA72';
 manager.transfer(kittyId, address).then(function(transactionHash) {
     console.log(transactionHash);
 });
+```
 
 Breeding
 --------
