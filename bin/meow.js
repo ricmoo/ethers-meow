@@ -77,10 +77,11 @@ getopts(options).then(function(opts) {
                             console.log('Kitty #' + kitty.id);
                             indented({
                                 "Birthdate":   formatDate(kitty.birthTime),
+                                "Owner":       kitty.owner,
+                                "Generation":  kitty.generation,
                                 "Busy Until":  kitty.nextActionAt,
                                 "Genes":       kitty.genes,
                                 "Matron Id":   String(kitty.matronId),
-                                "Owner":       kitty.owner,
                                 "Sire Id":     String(kitty.sireId),
                                 "Siring With": kitty.siringWithId,
                                 "URL":         ('https://www.cryptokitties.co/kitty/' + kittyId)
