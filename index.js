@@ -60,6 +60,7 @@ function Kitty(kittyId, details) {
 
     ethers.utils.defineProperty(this, 'matronId', details.matronId.toNumber());
     ethers.utils.defineProperty(this, 'sireId', details.sireId.toNumber());
+    ethers.utils.defineProperty(this, 'generation', details.generation.toNumber());
 
     ethers.utils.defineProperty(this, 'birthTime', details.birthTime.toNumber());
     ethers.utils.defineProperty(this, 'nextActionAt', details.nextActionAt.toNumber());
