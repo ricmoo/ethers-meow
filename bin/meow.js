@@ -80,8 +80,8 @@ getopts(options).then(function(opts) {
                                 "Busy Until":  kitty.nextActionAt,
                                 "Generation":  kitty.generation,
                                 "Genes":       kitty.genes,
-                                "Owner":       kitty.owner,
                                 "Matron Id":   String(kitty.matronId),
+                                "Owner":       kitty.owner,
                                 "Sire Id":     String(kitty.sireId),
                                 "Siring With": kitty.siringWithId,
                                 "URL":         ('https://www.cryptokitties.co/kitty/' + kittyId)
