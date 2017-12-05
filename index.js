@@ -57,21 +57,20 @@ var cooldownNames = [
 
 function Kitty(kittyId, details) {
     ethers.utils.defineProperty(this, 'id', kittyId);
-
     ethers.utils.defineProperty(this, 'matronId', details.matronId.toNumber());
     ethers.utils.defineProperty(this, 'sireId', details.sireId.toNumber());
-    ethers.utils.defineProperty(this, 'generation', details.generation.toNumber());
 
     ethers.utils.defineProperty(this, 'birthTime', details.birthTime.toNumber());
-    ethers.utils.defineProperty(this, 'nextActionAt', details.nextActionAt.toNumber());
-    ethers.utils.defineProperty(this, 'siringWithId', details.siringWithId.toNumber());
-
-    ethers.utils.defineProperty(this, 'cooldownIndex', details.cooldownIndex.toNumber());
+    ethers.utils.defineProperty(this, 'generation', details.generation.toNumber());
 
     ethers.utils.defineProperty(this, 'genes', details.genes.toHexString());
 
+    ethers.utils.defineProperty(this, 'cooldownIndex', details.cooldownIndex.toNumber());
+    ethers.utils.defineProperty(this, 'nextActionAt', details.nextActionAt.toNumber());
+
     ethers.utils.defineProperty(this, 'ready', details.isReady);
     ethers.utils.defineProperty(this, 'pregnant', details.isGestating);
+    ethers.utils.defineProperty(this, 'siringWithId', details.siringWithId.toNumber());
 
     ethers.utils.defineProperty(this, 'owner', details.owner);
 }

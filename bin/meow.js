@@ -78,6 +78,7 @@ getopts(options).then(function(opts) {
                             indented({
                                 "Birthdate":   formatDate(kitty.birthTime),
                                 "Busy Until":  kitty.nextActionAt,
+                                "Generation":  kitty.generation,
                                 "Genes":       kitty.genes,
                                 "Matron Id":   String(kitty.matronId),
                                 "Owner":       kitty.owner,
