@@ -192,7 +192,7 @@ Breed
   Transaction:  0x6e397a3d3a054e1241a3e1356cd4c567bedcbaf27457aba48a2a44c8b0aea2f7
 ```
 
-**Approve another account to breed with you kitty**
+**Approve another account to breed with your kitty**
 
 ```
 /Users/ricmoo> meow approve-siring 13968 0x8ba1f109551bd432803012645ac136ddd64dba72 --account account.json 
@@ -351,7 +351,7 @@ General Details (readonly)
 
 ```javascript
 manager.getKitty(20000).then(function(kitty) {
-    console.log(status);
+    console.log(kitty);
 });
 ```
 
@@ -372,6 +372,7 @@ var address = '0x8ba1f109551bD432803012645Ac136ddd64DBA72';
 manager.transfer(kittyId, address).then(function(transactionHash) {
     console.log(transactionHash);
 });
+```
 
 Breeding
 --------
