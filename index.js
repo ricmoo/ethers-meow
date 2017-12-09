@@ -87,8 +87,8 @@ function Manager(providerOrSigner) {
     ethers.utils.defineProperty(this, 'signer', signer);
     ethers.utils.defineProperty(this, 'provider', provider);
 
-    ethers.utils.defineProperty(this, '_siringClock', new ethers.Contract(siringClockAddress, siringClockInterface, provider));
-    ethers.utils.defineProperty(this, '_saleClock', new ethers.Contract(saleClockAddress, saleClockInterface, provider));
+    ethers.utils.defineProperty(this, '_siringClock', new ethers.Contract(siringClockAddress, siringClockInterface, providerOrSigner));
+    ethers.utils.defineProperty(this, '_saleClock', new ethers.Contract(saleClockAddress, saleClockInterface, providerOrSigner));
     ethers.utils.defineProperty(this, '_kittyCore', new ethers.Contract(kittyCoreAddress, kittyCoreInterface, providerOrSigner));
 }
 
@@ -186,6 +186,7 @@ Manager.prototype.breed = function(matronId, sireId) {
         this._kittyCore.ownerOf(matronId),
         this._kittyCore.autoBirthFee()
     ]).then(function(result) {
+        console.log(result);
         if (!result[0].canBreed) { throw new Error('kitties cannot breed'); }
         if (!result[0].matronReady) { throw new Error('matron not ready'); }
         if (!result[0].sireReady) { throw new Error('sire not ready'); }
@@ -202,18 +203,131 @@ Manager.prototype.breed = function(matronId, sireId) {
 
 Manager.prototype.giveBirth = function(kittyId) {
     if (this.signer == null) { return Promise.reject(new Error('missing signer')); }
-    return this._kittyCore.giveBirth(kittyId);
+    var options = {
+        gasLimit: 300000
+    };
+    return this._kittyCore.giveBirth(kittyId, options);
 }
 
-Manager.prototype.approve = function(kittyId, address) {
+Manager.prototype.approveSiring = function(kittyId, address) {
     if (this.signer == null) { return Promise.reject(new Error('missing signer')); }
-    return this._kittyCore.approveSiring(address, kittyId);
+    var options = {
+        gasLimit: 125000
+    };
+    return this._kittyCore.approveSiring(address, kittyId, options);
 }
 
 Manager.prototype.transfer = function(kittyId, address) {
     if (this.signer == null) { return Promise.reject(new Error('missing signer')); }
-    return this._kittyCore.transfer(address, kittyId);
+    var options = {
+        gasLimit: 125000
+    };
+    return this._kittyCore.transfer(address, kittyId, options);
 }
+
+
+Manager.prototype._getAuction = function(contract, kittyId) {
+    return Promise.all([
+        contract.getAuction(kittyId),
+        contract.getCurrentPrice(kittyId),
+    ]).then(function(result) {
+        return {
+            seller: result[0].seller,
+            startPrice: result[0].startingPrice,
+            endPrice: result[0].endingPrice,
+            duration: result[0].duration,
+            currentPrice: result[1][0]
+        }
+    }, function (error) {
+        return null;
+    });
+}
+
+
+Manager.prototype.getSaleAuction = function(kittyId) {
+    return this._getAuction(this._saleClock, kittyId);
+}
+
+Manager.prototype.getSiringAuction = function(kittyId) {
+    return this._getAuction(this._siringClock, kittyId);
+}
+
+
+Manager.prototype.createSaleAuction = function(kittyId, startPrice, endPrice, duration) {
+    if (this.signer == null) { return Promise.reject(new Error('missing signer')); }
+    var options = {
+        gasLimit: 250000
+    };
+
+    return this._kittyCore.createSaleAuction(kittyId, startPrice, endPrice, duration, options);
+}
+
+Manager.prototype.createSiringAuction = function(kittyId, startPrice, endPrice, duration) {
+    if (this.signer == null) { return Promise.reject(new Error('missing signer')); }
+    var options = {
+        gasLimit: 250000
+    };
+
+    return this._kittyCore.createSiringAuction(kittyId, startPrice, endPrice, duration, options);
+}
+
+
+Manager.prototype.bidOnSaleAuction = function(kittyId) {
+    if (this.signer == null) { return Promise.reject(new Error('missing signer')); }
+
+    var self = this;
+
+    return this.getSaleAuction(kittyId).then(function(result) {
+        if (result == null) {
+            throw new Error('invalid auction');
+        }
+
+        var options = {
+            gasLimit: 275000,
+            value: result.currentPrice
+        };
+
+        return self._saleClock.bid(kittyId, options)
+    })
+}
+
+Manager.prototype.bidOnSiringAuction = function(sireId, matronId) {
+    if (this.signer == null) { return Promise.reject(new Error('missing signer')); }
+
+    var self = this;
+
+    return Promise.all([
+        this.getSiringAuction(sireId),
+        this._kittyCore.autoBirthFee()
+    ]).then(function(result) {
+        var options = {
+            gasLimit: 275000,
+            value: result[0].currentPrice.add(result[1][0])
+        };
+
+        return self._kittyCore.bidOnSiringAuction(sireId, matronId, options)
+    })
+}
+
+
+Manager.prototype.cancelSaleAuction = function(kittyId) {
+    if (this.signer == null) { return Promise.reject(new Error('missing signer')); }
+
+    var options = {
+        gasLimit: 150000
+    };
+    return this._saleClock.cancelAuction(kittyId, options);
+}
+
+Manager.prototype.cancelSiringAuction = function(kittyId) {
+    if (this.signer == null) { return Promise.reject(new Error('missing signer')); }
+
+    var options = {
+        gasLimit: 150000
+    };
+    return this._siringClock.cancelAuction(kittyId, options);
+}
+
 
 Manager.prototype._getGeneScience = function() {
     if (!this._geneSciencePromise) {
@@ -233,6 +347,7 @@ Manager.prototype.mixGenes = function(genes1, genes2, targetBlock) {
         });
     });
 }
+
 
 module.exports = {
     Kitty: Kitty,

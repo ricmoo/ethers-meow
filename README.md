@@ -28,15 +28,25 @@ Usage:
     meow status
 
     meow init FILENAME
-    meow info FILENAME
+    meow info ( FILENAME | ADDRESS )
 
     meow transfer KITTY_ID ADDRESS
 
     meow check MATRON_ID SIRE_ID
     meow breed MATRON_ID SIRE_ID
-    meow approve KITTY_ID ADDRESS
+    meow approve-breed KITTY_ID ADDRESS
 
     meow give-birth KITTY_ID
+
+    meow sale-create KITTY_ID START_PRICE END_PRICE DURATION_HOURS
+    meow sale-bid KITTY_ID
+    meow sale-cancel KITTY_ID
+
+    meow siring-create KITTY_ID START_PRICE END_PRICE DURATION_HOURS
+    meow siring-bid OTHER_SIRE_ID MY_MATRON
+    meow siring-cancel KITTY_ID
+
+    meow mix-genes GENES1 GENES2 TARGET_BLOCK
 
 Node Options
   --rpc URL             Use the Ethereum node at URL
@@ -185,7 +195,7 @@ Breed
 **Approve another account to breed with you kitty**
 
 ```
-/Users/ricmoo> meow approve 13968 0x8ba1f109551bd432803012645ac136ddd64dba72 --account account.json 
+/Users/ricmoo> meow approve-siring 13968 0x8ba1f109551bd432803012645ac136ddd64dba72 --account account.json 
 Sign Transaction:
     Network:       mainnet
     From:          0x8b5ebdc77dd2c746b49ED198df2BC1a26aeEF425
@@ -198,6 +208,106 @@ Sign Transaction:
 Account Password (mainnet:account.json): ******
 Approve
   Transaction:  0xcd8f98a301bec493525255e5c2b3abb19f16508d994b222b0050e44ab991f81c
+```
+
+
+### Sale Auctions
+
+```
+/Users/ricmoo> meow --account account.json sale-create 78047 0.4 0.1 24
+Sign Transaction:
+    Network:       mainnet
+    From:          0xc6AA736b0bA6175701c625eAFE52F0ceE39a3596
+    To:            0x06012c8cf97BEaD5deAe237070F9587f8E7A266d
+    Gas Price:     61.1 Gwei
+    Gas Limit:     250000
+    Nonce:         undefined
+    Value:         0.0 ether
+    Data:          132 bytes
+Account Password (mainnet:account.json): ******
+Create Sale Auction
+  Transaction:  0x5018051f1fffc97ba5c95f17b2bd09abc50f915c053f8a459236b96f34f553a3
+```
+
+```
+/Users/ricmoo> meow --account account.json sale-bid 145636
+Sign Transaction:
+    Network:       mainnet
+    From:          0x8ba1f109551bD432803012645Ac136ddd64DBA72
+    To:            0xb1690C08E213a35Ed9bAb7B318DE14420FB57d8C
+    Gas Price:     40.1 Gwei
+    Gas Limit:     275000
+    Nonce:         undefined
+    Value:         0.029826851851851852 ether
+    Data:          36 bytes
+Account Password (mainnet:account.json): ******
+Bid On Sale Auction
+  Transaction:  0x37f36b88423e1a51688b9a4e8280463fde23720d1d7cb31c216380510db33de6
+```
+
+```
+/Users/ricmoo> meow --account account.json  sale-cancel 84216
+Sign Transaction:
+    Network:       mainnet
+    From:          0x8ba1f109551bD432803012645Ac136ddd64DBA72
+    To:            0xb1690C08E213a35Ed9bAb7B318DE14420FB57d8C
+    Gas Price:     40.1 Gwei
+    Gas Limit:     150000
+    Nonce:         undefined
+    Value:         0.0 ether
+    Data:          36 bytes
+Account Password (mainnet:account.json): ******
+Give Birth
+  Transaction:  0x30724635da06111a9436b5f69c612937961d7da5ce68ff9e989c91d3d4715877
+```
+
+
+### Siring Auctions
+
+```
+/Users/ricmoo> meow --account account.json siring-create 85293 0.8 0.3 24
+Sign Transaction:
+    Network:       mainnet
+    From:          0x8ba1f109551bD432803012645Ac136ddd64DBA72
+    To:            0x06012c8cf97BEaD5deAe237070F9587f8E7A266d
+    Gas Price:     40.1 Gwei
+    Gas Limit:     250000
+    Nonce:         undefined
+    Value:         0.0 ether
+    Data:          132 bytes
+Account Password (mainnet:account.json): ******
+Create Siring Auction
+  Transaction:  0xb78052d65db98b1fd2850cdb49f22892ebbfca4df96d5af4744caf8a8643c8d0
+```
+
+```
+/Users/ricmoo> meow --account account.json siring-bid 175715 8985
+Sign Transaction:
+    Network:       mainnet
+    From:          0x8ba1f109551bD432803012645Ac136ddd64DBA72
+    To:            0x06012c8cf97BEaD5deAe237070F9587f8E7A266d
+    Gas Price:     40.1 Gwei
+    Gas Limit:     275000
+    Nonce:         undefined
+    Value:         0.021325694444444444 ether
+    Data:          68 bytes
+Account Password (mainnet:account.json.json): ******
+Bid On Siring Auction
+  Transaction:  0x5f58d197625e8e21881c51ec5451a85142daa9a8db3fb529d73e0af2b5b3f2ab```
+```
+
+```
+/Users/ricmoo> meow --account account.json siring-cancel 85293
+Sign Transaction:
+    Network:       mainnet
+    From:          0x8ba1f109551bD432803012645Ac136ddd64DBA72
+    To:            0xC7af99Fe5513eB6710e6D5f44F9989dA40F27F26
+    Gas Price:     40.1 Gwei
+    Gas Limit:     150000
+    Nonce:         undefined
+    Value:         0.0 ether
+    Data:          36 bytes
+Account Password (mainnet:account.json.json): ******
 ```
 
 -----
@@ -291,7 +401,8 @@ manager.breed(matronId, sireId).then(function(transactionHash) {
 ```
 var kittyId = 20000;
 var address = '0x8ba1f109551bD432803012645Ac136ddd64DBA72';
-manager.approve(kittyId, address).then(function(transactionHash) {
+manager.approveSiring(kittyId, address).then(function(transactionHash) {
+    console.log(transactionHash);
 });
 ```
 
@@ -307,6 +418,74 @@ people competing to birth your kitty.
 
 ```javascript
 manager.giveBirth(10000).then(funtion(transactionHash) {
+    console.log(transactionHash);
+});
+```
+
+Sale Auctions
+-------------
+
+**Creating a sale auction**
+
+```javascript
+var kittyId = 20000;
+var startPrice = ethers.utils.parseEther('1.0');
+var endPrice = ethers.utils.parseEther('0.5');
+var durationSeconds = (60 * 60 * 24);
+manager.createSaleAuction(kittyId, startPrice, endPrice, durationSeconds).then(funtion(transactionHash) {
+    console.log(transactionHash);
+});
+```
+
+**Bidding on a sale auction**
+
+```javascript
+var kittyId = 20000;
+manager.bidOnSaleAuction(kittyId).then(funtion(transactionHash) {
+    console.log(transactionHash);
+});
+```
+
+**Cancelling a sale auction**
+
+```javascript
+var kittyId = 20000;
+manager.cancelSaleAuction(kittyId).then(funtion(transactionHash) {
+    console.log(transactionHash);
+});
+```
+
+
+Siring Auctions
+---------------
+
+**Creating a siring auction**
+
+```javascript
+var kittyId = 20000;
+var startPrice = ethers.utils.parseEther('1.0');
+var endPrice = ethers.utils.parseEther('0.5');
+var durationSeconds = (60 * 60 * 24);
+manager.createSiringAuction(kittyId, startPrice, endPrice, durationSeconds).then(funtion(transactionHash) {
+    console.log(transactionHash);
+});
+```
+
+**Bidding on a siring auction**
+
+```javascript
+var otherSireKittyId = 10001;
+var myMatronKittyId = 20000;
+manager.bidOnSiringAuction(otherSireKittyId, myMatronKittyId).then(funtion(transactionHash) {
+    console.log(transactionHash);
+});
+```
+
+**Cancelling a siring auction**
+
+```javascript
+var kittyId = 20000;
+manager.cancelSiringAuction(kittyId).then(funtion(transactionHash) {
     console.log(transactionHash);
 });
 ```
