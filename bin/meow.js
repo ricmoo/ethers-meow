@@ -540,6 +540,8 @@ getopts(options).then(function(opts) {
     console.log('');
     console.log('    meow mix-genes GENES1 GENES2 TARGET_BLOCK');
     console.log('');
+    console.log('    meow rename KITTY_ID NAME');
+    console.log('');
     console.log('Node Options');
     console.log('  --rpc URL             Use the Ethereum node at URL');
     console.log('');
