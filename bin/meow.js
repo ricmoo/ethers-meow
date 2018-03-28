@@ -42,6 +42,10 @@ var options = {
     help: false,
     version: false,
 
+    photo: false,
+
+    token: '',
+
     _accounts: true,
     _provider: true,
     _promises:true
@@ -483,6 +487,17 @@ getopts(options).then(function(opts) {
                     indented({
                         'Genes': result
                     });
+                });
+            });
+        })();
+
+        case 'rename': return (function() {
+            if (opts.args.length !== 2) { getopts.throwError('rename requires KITTY_ID and NAME'); }
+            var kittyId = parseInt(opts.args.shift());
+            var name = opts.args.shift();
+            return (function() {
+                return manager.rename(kittyId, name).then(function(result) {
+                    console.log(result);
                 });
             });
         })();

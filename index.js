@@ -1,5 +1,7 @@
 'use strict';
 
+var https = require('https');
+
 var ethers = require('ethers');
 
 var kittyCoreInterface = require('./contracts/KittyCore.json');
@@ -55,6 +57,7 @@ var cooldownNames = [
     'catatonic'
 ];
 
+
 function Kitty(kittyId, details) {
     ethers.utils.defineProperty(this, 'id', kittyId);
     ethers.utils.defineProperty(this, 'matronId', details.matronId.toNumber());
@@ -99,8 +102,8 @@ Manager.prototype.getKitty = function(kittyId) {
         this._kittyCore.getKitty(kittyId),
         this._kittyCore.ownerOf(kittyId),
     ]).then(function(result) {
-        result[0].owner = result[1][0];
-        return new Kitty(kittyId, result[0]);
+        result[0] = result[1];
+        return new Kitty(kittyId, result);
     })
 }
 
@@ -136,7 +139,7 @@ Manager.prototype.getStatus = function() {
 
         result.forEach(function(result, index) {
             var key = keys[index];
-            result = result[0];
+            result = result;
             if (toNumber[key]) { result = result.toNumber(); }
             status[key] = result;
         });
@@ -147,15 +150,14 @@ Manager.prototype.getStatus = function() {
 
 Manager.prototype.getKittyCount = function(address) {
     return this._kittyCore.balanceOf(address).then(function(result) {
-        return result[0].toNumber();
+        return result.toNumber();
     });
 }
 
 Manager.prototype.getKittyIds = function(address) {
-    console.log(address);
     return this._kittyCore.tokensOfOwner(address).then(function(result) {
         var ids = [];
-        result[0].forEach(function(id) {
+        result.forEach(function(id) {
             ids.push(id.toNumber());
         });
         return ids;
@@ -169,9 +171,9 @@ Manager.prototype.check = function(matronId, sireId) {
         this._kittyCore.isReadyToBreed(sireId),
     ]).then(function(result) {
         return {
-            canBreed: result[0][0],
-            matronReady: result[1][0],
-            sireReady: result[2][0],
+            canBreed: result[0],
+            matronReady: result[1],
+            sireReady: result[2],
         }
     });
 }
@@ -186,15 +188,14 @@ Manager.prototype.breed = function(matronId, sireId) {
         this._kittyCore.ownerOf(matronId),
         this._kittyCore.autoBirthFee()
     ]).then(function(result) {
-        console.log(result);
         if (!result[0].canBreed) { throw new Error('kitties cannot breed'); }
         if (!result[0].matronReady) { throw new Error('matron not ready'); }
         if (!result[0].sireReady) { throw new Error('sire not ready'); }
-        if (result[1].owner !== self.signer.address) { throw new Error('account does not own matron'); }
+        if (result[1] !== self.signer.address) { throw new Error('account does not own matron'); }
 
         var options = {
             gasLimit: 125000,
-            value: result[2][0]
+            value: result[2]
         };
 
         return self._kittyCore.breedWithAuto(matronId, sireId, options);
@@ -236,7 +237,7 @@ Manager.prototype._getAuction = function(contract, kittyId) {
             startPrice: result[0].startingPrice,
             endPrice: result[0].endingPrice,
             duration: result[0].duration,
-            currentPrice: result[1][0]
+            currentPrice: result[1]
         }
     }, function (error) {
         return null;
@@ -302,7 +303,7 @@ Manager.prototype.bidOnSiringAuction = function(sireId, matronId) {
     ]).then(function(result) {
         var options = {
             gasLimit: 275000,
-            value: result[0].currentPrice.add(result[1][0])
+            value: result[0].currentPrice.add(result[1])
         };
 
         return self._kittyCore.bidOnSiringAuction(sireId, matronId, options)
@@ -333,7 +334,7 @@ Manager.prototype._getGeneScience = function() {
     if (!this._geneSciencePromise) {
         var self = this;
         this._geneSciencePromise = this._kittyCore.geneScience().then(function(result) {
-            return new ethers.Contract(result[0], geneScienceInterface, self.provider);
+            return new ethers.Contract(result, geneScienceInterface, self.provider);
         });
     }
     return this._geneSciencePromise;
@@ -343,11 +344,131 @@ Manager.prototype.mixGenes = function(genes1, genes2, targetBlock) {
     var self = this;
     return this._getGeneScience().then(function(contract) {
         return contract.mixGenes(genes1, genes2, targetBlock).then(function(result) {
-            return result[0];
+            return result;
         });
     });
 }
 
+Manager.prototype._fetch = function(method, path, body) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+
+        var headers = {
+            'Content-Length': String(body.length),
+            'Content-Type': 'application/json;charset=UTF-8',
+        };
+
+        if (self.token) {
+            headers['Authorization'] = self.token;
+        }
+
+        var request = https.request({
+            hostname: 'api.cryptokitties.co',
+            port: 443,
+            method: method,
+            path: path,
+            headers: headers,
+            Agent: 'ethers-meow'
+        }, function(response) {
+            var data = new Buffer([]);
+
+            response.on('data', function(chunk) {
+                data = Buffer.concat([data, chunk]);
+            });
+
+            response.on('end', function() {
+                try {
+                    var result = JSON.parse(data.toString());
+                    resolve(result);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        });
+        request.write(body);
+        request.end();
+    });
+}
+
+Manager.prototype.getToken = function() {
+    if (this.signer == null) { return Promise.reject(new Error('missing signer')); }
+
+    if (this.token) { return Promise.resolve(this.token); }
+
+    var addressPromise = this.signer.getAddress ? this.signer.getAddress(): this.signer.address;
+    if (!(addressPromise instanceof Promise)) { addressPromise = Promise.resolve(addressPromise); }
+
+    var signaturePromise = this.signer.signMessage('Cryptokitties');
+    if (!(signaturePromise instanceof Promise)) { signaturePromise = Promise.resolve(signaturePromise); }
+
+    var self = this;
+    return Promise.all([
+        addressPromise,
+        signaturePromise
+    ]).then(function(result) {
+        var payload = JSON.stringify({
+            address: result[0].toLowerCase(),
+            sign: result[1]
+        });
+
+        return self._fetch('POST', '/sign', payload).then(function(info) {
+            if (info.token) {
+                self.token = info.token;
+            }
+            return self.token;
+        });
+    });
+}
+
+Manager.prototype.rename = function(kittyId, name) {
+    var self = this;
+    return this.getToken().then(function(token) {
+        var payload = JSON.stringify({
+            id: kittyId,
+            name: name
+        });
+        return self._fetch('PATCH', '/kitties/' + kittyId, payload).then(function(result) {
+            return result;
+        });
+    });
+}
+/*
+var https = require('https');
+(function() {
+    var payload = JSON.stringify({ id: 84216, name: 'Stumps - test4 - Fast (V)' });
+    var url = 'https://api.cryptokitties.co/kitties/84216';
+    var method = 'PATCH';
+    var auth = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhZGRyZXNzIjoiMHg4YmExZjEwOTU1MWJkNDMyODAzMDEyNjQ1YWMxMzZkZGQ2NGRiYTcyIn0.qakaN4w6cXlsWTZZ8fyrsSeND6TrgvfnrYa3lgicwxU';
+    var headers = {
+        'Authorization': auth,
+        'Content-Length': String(payload.length),
+        'Content-Type': 'application/json;charset=UTF-8',
+    };
+
+    var request = https.request({
+        hostname: 'api.cryptokitties.co',
+        port: 443,
+        method: 'PATCH',
+        path: '/kitties/84216',
+        headers: headers,
+        Agent: 'ethers-meow'
+    }, function(response) {
+        console.log('ARG', arguments);
+        var data = new Buffer([]);
+        response.on('data', function(chunk) {
+            console.log(chunk);
+            data = Buffer.concat([data, chunk]);
+        });
+        response.on('end', function() {
+            var result = JSON.parse(data.toString());
+            console.log('end', result);
+        });
+    });
+    console.log(request);
+    request.write(payload);
+    request.end();
+})();
+*/
 
 module.exports = {
     Kitty: Kitty,
