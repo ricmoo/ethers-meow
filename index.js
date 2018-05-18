@@ -432,6 +432,20 @@ Manager.prototype.rename = function(kittyId, name) {
         });
     });
 }
+
+Manager.prototype.setUser = function(nickname, email) {
+    var self = this;
+    return this.getToken().then(function(token) {
+        var payload = JSON.stringify({
+            email: email,
+            image: 3,
+            nickname: nickname
+        });
+        return self._fetch('PATCH', '/user/me', payload).then(function(result) {
+            return result;
+        });
+    });
+}
 /*
 var https = require('https');
 (function() {

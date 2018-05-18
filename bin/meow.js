@@ -502,6 +502,17 @@ getopts(options).then(function(opts) {
             });
         })();
 
+        case 'set-user': return (function() {
+            if (opts.args.length !== 2) { getopts.throwError('user requires NICKNAME and EMAIL'); }
+            var nickname = opts.args.shift();
+            var email = opts.args.shift();
+            return (function() {
+                return manager.setUser(nickname, email).then(function(result) {
+                    console.log(result);
+                });
+            });
+        })();
+
         default:
             getopts.throwError('unknown command - ' + command);
     }
@@ -541,6 +552,7 @@ getopts(options).then(function(opts) {
     console.log('    meow mix-genes GENES1 GENES2 TARGET_BLOCK');
     console.log('');
     console.log('    meow rename KITTY_ID NAME');
+    console.log('    meow set-user NICKNAME EMAIL');
     console.log('');
     console.log('Node Options');
     console.log('  --rpc URL             Use the Ethereum node at URL');
