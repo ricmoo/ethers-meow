@@ -102,8 +102,8 @@ Manager.prototype.getKitty = function(kittyId) {
         this._kittyCore.getKitty(kittyId),
         this._kittyCore.ownerOf(kittyId),
     ]).then(function(result) {
-        result[0] = result[1];
-        return new Kitty(kittyId, result);
+        result[0].owner = result[1];
+        return new Kitty(kittyId, result[0]);
     })
 }
 

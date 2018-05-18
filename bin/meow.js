@@ -86,7 +86,7 @@ getopts(options).then(function(opts) {
             return (function() {
                 var seq = Promise.resolve();
                 opts.args.forEach(function(kittyId) {
-                    kittyId = ethers.utils.bigNumberify(kittyId);
+                    kittyId = ethers.utils.bigNumberify(kittyId).toNumber();
 
                     seq = seq.then(function() {
                         return Promise.all([
